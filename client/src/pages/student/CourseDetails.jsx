@@ -20,12 +20,15 @@ const CourseDetails = () => {
   const { allCourses, calculateRating, calcualteNoOfLectures, calculateCourseDuration, calculateChapterTime, currency } = useContext(AppContext);
 
   const fetchCourseData = async () => {
-    const findCourse = allCourses.find(course => course._id == id);
+    const findCourse = allCourses.find(course => course._id === id);
     setCourseData(findCourse);
+    
   }
 
   useEffect(() => {
     fetchCourseData();
+    console.log(courseData)
+    console.log(typeof courseData)
   }, [allCourses])
 
   const toggleSection = (index) => {
@@ -34,7 +37,10 @@ const CourseDetails = () => {
     ))
   }
 
-  return courseData ? (
+  console.log(courseData);
+  // console.log(courseData.courseContent);
+
+  return courseData  ? (
     <>
       <div className='flex md:flex-row flex-col-reverse gap-10 relative items-start justify-between md:px-36 px-8 md:pt-30 pt-20 text-left'>
 
@@ -52,7 +58,7 @@ const CourseDetails = () => {
             </div>
             <p className='text-gray-500'>{courseData.courseRatings.length} {courseData.courseRatings.length > 1 ? "ratings" : "rating"}</p>
 
-            <p className='text-blue-600'>{courseData.enrolledStudents.length} {courseData.enrolledStudents.length > 1 ? "students" : "student"}</p>
+            <p className='text-blue-600'>{Array(courseData.enrolledStudents).length} {Array(courseData.enrolledStudents).length > 1 ? "students" : "student"}</p>
           </div>
 
           <p className='text-sm'>Course by <span className='text-blue-600 underline'>Edemy</span></p>
@@ -60,7 +66,7 @@ const CourseDetails = () => {
           <div className='pt-8 text-gray-800'>
             <h2 className='text-xl font-semibold'>Course Structure</h2>
             <div className='pt-5'>
-              {courseData.courseContent.map((chapter, index) => (
+              {courseData.courseContent?.map((chapter, index) => (
                 <div key={index} className='border border-gray-300 bg-white mb-2 rounded'>
                   <div onClick={() => toggleSection(index)} className='flex items-center justify-between px-4 py-3 cursor-pointer select-none'>
                     <div className='flex items-center gap-2'>
