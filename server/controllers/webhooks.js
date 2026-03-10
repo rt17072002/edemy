@@ -20,6 +20,10 @@ export const clerkWebhooks = async (req, res) => {
 
         const { data, type } = req.body;
 
+        console.log(req.body);
+
+        console.log({data, type});
+
         switch (type) {
             case "user.created": {
                 const userData = {
@@ -30,7 +34,7 @@ export const clerkWebhooks = async (req, res) => {
                 }
                 console.log("userData is " + userData);
                 await User.create(userData);
-                console.log("it is saved now");
+                console.log("User is saved to database now");
                 res.json({})
                 break;
             }
@@ -86,21 +90,16 @@ export const stripeWebhooks = async (req, res) => {
             const {purchaseId} = session.data[0].metadata;
 
             const purchaseData = await Purchase.findById(purchaseId);
-
             const userData = await User.findById(purchaseData.userId);
-
             const courseData = await Course.findById(purchaseData.courseId);
 
             courseData.enrolledStudents.push(userData);
-
             await courseData.save();
 
             userData.enrolledCourses.push(courseData._id);
-
             await userData.save();
 
             purchaseData.status = "completed";
-
             await purchaseData.save();
             break;
         }
@@ -120,6 +119,7 @@ export const stripeWebhooks = async (req, res) => {
 
         default:
             console.log(`Unhandled event type ${event.type}`)
+            break;
     }
 
     res.json({received: true});

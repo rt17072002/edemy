@@ -32,7 +32,7 @@ const AppContextProvider = (props) => {
 
             if (data.success) {
                 setAllCourses(data.courses);
-                console.log(data.courses);
+                // console.log(data.courses);
             } else {
                 toast.error(data.message);
             }
@@ -125,15 +125,19 @@ const AppContextProvider = (props) => {
         }
     }
 
-    useEffect(() => {
-        fetchCourses();
-        
-    }, [])
+    // useEffect(() => {
+    //     fetchCourses();
+    // }, [])
+
+    const logToken = async ()=>{
+        console.log(await getToken())
+    }
 
     useEffect(() => {
         if (user) {
-            fetchUserData();
-            fetchUserEnrolledCourses();
+            logToken()
+            // fetchUserData();
+            // fetchUserEnrolledCourses();
         }
     }, [user])
 
