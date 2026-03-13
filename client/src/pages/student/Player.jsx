@@ -41,7 +41,9 @@ const Player = () => {
   }
 
   useEffect(() => {
-    if (enrolledCourses.length > 0) getCourseData();
+    if (enrolledCourses.length > 0){
+      getCourseData();
+    }
   }, [enrolledCourses])
 
   const markLectureAsCompleted = async ( lectureId) => {
@@ -51,6 +53,7 @@ const Player = () => {
 
       if (data.success) {
         toast.success(data.message);
+        getCourseProgress()
       } else {
         toast.error(data.message);
       }

@@ -19,36 +19,36 @@ const CourseDetails = () => {
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false);
   const [playerData, setPlayerData] = useState(null);
 
-  const { allCourses, calculateRating, calculateNoOfLectures, calculateCourseDuration, calculateChapterTime, currency, backendUrl, userData, getToken } = useContext(AppContext);
+  const { navigate, allCourses, calculateRating, calculateNoOfLectures, calculateCourseDuration, calculateChapterTime, currency, backendUrl, userData, getToken } = useContext(AppContext);
 
   const fetchCourseData = async () => {
-    try{
-      const {data} = await axios.get(backendUrl+"/api/courses/"+id);
+    try {
+      const { data } = await axios.get(backendUrl + "/api/courses/" + id);
 
-      if(data.success){
+      if (data.success) {
         setCourseData(data.courseData);
-      }else{
+      } else {
         toast.error(data.message)
       }
-    }catch(error){
+    } catch (error) {
       toast.error(error.message);
     }
   }
-  
-  const enrollCourse = async ()=>{
+
+  const enrollCourse = async () => {
     try {
-      if(!userData){
+      if (!userData) {
         return toast.warn("Login to Enroll");
       }
-      if(isAlreadyEnrolled){
+      if (isAlreadyEnrolled) {
         return toast.warn("Already Enrolled");
       }
 
       const token = await getToken();
-      const {data} = await axios.post(backendUrl+'/api/user/purchase', {courseId:courseData._id}, {headers:{Authorization:`Bearer ${token}`}});
+      const { data } = await axios.post(backendUrl + '/api/user/purchase', { courseId: courseData._id }, { headers: { Authorization: `Bearer ${token}` } });
 
-      if(data.success){
-        const {session_url} = data;
+      if (data.success) {
+        const { session_url } = data;
         window.location.replace(session_url);
       }
     } catch (error) {
@@ -60,11 +60,11 @@ const CourseDetails = () => {
     fetchCourseData();
   }, [])
 
-  useEffect(()=>{
-    if(userData && courseData){
+  useEffect(() => {
+    if (userData && courseData) {
       setIsAlreadyEnrolled(userData.enrolledCourses.includes(courseData._id));
     }
-  },[userData, courseData]);
+  }, [userData, courseData]);
 
   const toggleSection = (index) => {
     setOpenSections((prev) => (
@@ -75,7 +75,7 @@ const CourseDetails = () => {
   // console.log(courseData);
   // console.log(courseData.courseContent);
 
-  return courseData  ? (
+  return courseData ? (
     <>
       <div className='flex md:flex-row flex-col-reverse gap-10 relative items-start justify-between md:px-36 px-8 md:pt-30 pt-20 text-left'>
 
