@@ -19,16 +19,15 @@ const AppContextProvider = (props) => {
     const { user } = useUser();
 
     let [allCourses, setAllCourses] = useState([]);
-    let [isEducator, setIsEducator] = useState(true);
+    let [isEducator, setIsEducator] = useState(false);
     let [enrolledCourses, setEnrolledCourses] = useState([]);
     let [userData, setUserData] = useState(null)
 
 
     // fetch all courses 
     const fetchCourses = async () => {
-        // setAllCourses(dummyCourses);
         try {
-            const { data } = await axios.get(backendUrl + "/api/course/all");
+            const { data } = await axios.get(backendUrl + "/api/courses/all");
 
             if (data.success) {
                 setAllCourses(data.courses);
@@ -57,7 +56,7 @@ const AppContextProvider = (props) => {
 
             if (data.success) {
                 setUserData(data.user);
-                console.log(token);
+                // console.log(token);
             } else {
                 toast.error(data.message);
             }
@@ -95,7 +94,7 @@ const AppContextProvider = (props) => {
     }
 
     //function to calculate no of lectures in the course
-    const calcualteNoOfLectures = (course) => {
+    const calculateNoOfLectures = (course) => {
         let totalLectures = 0;
 
         course.courseContent?.forEach(chapter => {
@@ -109,7 +108,6 @@ const AppContextProvider = (props) => {
 
     //Fetch user enrolled courses
     const fetchUserEnrolledCourses = async () => {
-        // setEnrolledCourses(dummyCourses);
         try {
             const token = await getToken();
 
@@ -125,19 +123,14 @@ const AppContextProvider = (props) => {
         }
     }
 
-    // useEffect(() => {
-    //     fetchCourses();
-    // }, [])
-
-    const logToken = async ()=>{
-        console.log(await getToken())
-    }
+    useEffect(() => {
+        fetchCourses();
+    }, [])
 
     useEffect(() => {
         if (user) {
-            logToken()
-            // fetchUserData();
-            // fetchUserEnrolledCourses();
+            fetchUserData();
+            fetchUserEnrolledCourses();
         }
     }, [user])
 
@@ -147,7 +140,7 @@ const AppContextProvider = (props) => {
         navigate,
         calculateRating,
         isEducator, setIsEducator,
-        calculateChapterTime, calculateCourseDuration, calcualteNoOfLectures,
+        calculateChapterTime, calculateCourseDuration, calculateNoOfLectures,
         enrolledCourses, setEnrolledCourses, fetchUserEnrolledCourses,
         backendUrl, userData, setUserData, getToken,
         fetchCourses,

@@ -1,9 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import uniqid from "uniqid";
 import Quill from "quill";
 import { assets } from '../../assets/assets';
+import { AppContext } from '../../context/AppContext';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const AddCourse = () => {
+
+  const { backendUrl, getToken } = useContext(AppContext);
 
   const quillRef = useRef(null);
   const editorRef = useRef(null);
@@ -23,37 +28,37 @@ const AddCourse = () => {
     isPreviewFree: false,
   })
 
-  const handleChapter = async (action, chapterId)=>{
-    if(action==="add"){
+  const handleChapter = async (action, chapterId) => {
+    if (action === "add") {
       const title = prompt("Enter Chapter Name:");
-      if(title){
+      if (title) {
         const newChapter = {
           chapterId: uniqid(),
           chapterTitle: title,
           chapterContent: [],
-          collapsed:false,
+          collapsed: false,
           chapterOrder: chapters.length > 0 ? chapters.slice(-1)[0].chapterOrder + 1 : 1,
         };
         setChapters([...chapters, newChapter]);
       }
-    }else if(action==="remove"){
-      setChapters(chapters.filter((chapter)=>chapter.chapterId !== chapterId));
-    }else if(action==="toggle"){
+    } else if (action === "remove") {
+      setChapters(chapters.filter((chapter) => chapter.chapterId !== chapterId));
+    } else if (action === "toggle") {
       setChapters(
-        chapters.map((chapter)=>
-        chapter.chapterId===chapterId ? {...chapter, collapsed: !chapter.collapsed} : chapter)
+        chapters.map((chapter) =>
+          chapter.chapterId === chapterId ? { ...chapter, collapsed: !chapter.collapsed } : chapter)
       )
     }
   }
 
-  const handleLecture = (action, chapterId, lectureIndex)=>{
-    if(action==="add"){
+  const handleLecture = (action, chapterId, lectureIndex) => {
+    if (action === "add") {
       setCurrentChapterId(chapterId);
       setShowPopup(true);
-    }else if(action === "remove"){
+    } else if (action === "remove") {
       setChapters(
-        chapters.map((chapter)=>{
-          if(chapter.chapterId === chapterId){
+        chapters.map((chapter) => {
+          if (chapter.chapterId === chapterId) {
             chapter.chapterContent.splice(lectureIndex, 1);
           }
           return chapter;
@@ -62,12 +67,13 @@ const AddCourse = () => {
     }
   }
 
-  const addLecture = ()=>{
+  const addLecture = () => {
     setChapters(
-      chapters.map((chapter)=>{
-        if(chapter.chapterId === currentChapterId){
+      chapters.map((chapter) => {
+        if (chapter.chapterId === currentChapterId) {
           const newLecture = {
             ...lectureDetails,
+            lectureId: uniqid(),
             lectureOrder: chapter.chapterContent.length > 0 ? chapter.chapterContent.slice(-1)[0].lectureOrder + 1 : 1,
           };
           chapter.chapterContent.push(newLecture);
@@ -77,15 +83,52 @@ const AddCourse = () => {
     );
     setShowPopup(false);
     setLectureDetails({
-      lectureTitle:"",
+      lectureTitle: "",
       lectureDuration: "",
-      lectureUrl:"",
+      lectureUrl: "",
       isPreviewFree: false,
     });
   };
 
-  const handleSubmit = async (e)=>{
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    try {
+      if (!image) {
+        toast.error("Thumbnail not selected")
+        return;
+      }
+
+      const courseData = {
+        courseTitle,
+        courseDescription: quillRef.current.root.innerHTML,
+        coursePrice: Number(coursePrice),
+        discount: Number(discount),
+        courseContent: chapters,
+      }
+
+      const formData = new FormData();
+      formData.append("courseData", JSON.stringify(courseData));
+      formData.append("image", image);
+
+      const token = await getToken();
+
+      const { data } = await axios.post(backendUrl + "/api/educator/add-course", formData, { headers: { Authorization: `Bearer ${token}` } })
+
+      if (data.success) {
+        toast.success(data.message);
+        setCourseTitle("")
+        setCoursePrice(0)
+        setDiscount(0)
+        setImage(null)
+        setChapters([])
+        quillRef.current.root.innerHTML = "";
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   }
 
   useEffect(() => {
@@ -118,7 +161,9 @@ const AddCourse = () => {
             <label htmlFor="thumbnailImage" className='flex items-center gap-3'>
               <img src={assets.file_upload_icon} className='p-3 bg-blue-500 rounded' alt="" />
               <input type="file" id="thumbnailImage" onChange={e => setImage(e.target.files[0])} accept="image/*" hidden />
-              <img src={image ? URL.createObjectURL(image) : ""} className='max-h-10' alt="" />
+              {image && (
+                <img src={URL.createObjectURL(image)} className="max-h-10" alt="thumbnail preview" />
+              )}
             </label>
           </div>
         </div>
@@ -133,26 +178,26 @@ const AddCourse = () => {
             <div className='bg-white border rounded-lg mb-4' key={chapterIndex}>
               <div className='flex justify-between items-center p-4 border-b'>
                 <div className='flex items-center'>
-                  <img onClick={()=>handleChapter("toggle", chapter.chapterId)} src={assets.dropdown_icon} width={14} className={`mr-2 cursor-pointer transition-all ${chapter.collapsed && "-rotate-90"}`} alt="" />
+                  <img onClick={() => handleChapter("toggle", chapter.chapterId)} src={assets.dropdown_icon} width={14} className={`mr-2 cursor-pointer transition-all ${chapter.collapsed && "-rotate-90"}`} alt="" />
                   <span className='font-semibold'>{chapterIndex + 1} {chapter.chapterTitle}</span>
                 </div>
                 <span className='text-gray-500'>{chapter.chapterContent.length} Lectures</span>
-                <img onClick={()=>handleChapter("remove", chapter.chapterId)} src={assets.cross_icon} className='cursor-pointer' alt="" />
+                <img onClick={() => handleChapter("remove", chapter.chapterId)} src={assets.cross_icon} className='cursor-pointer' alt="" />
               </div>
               {!chapter.collapsed && (
                 <div className='p-4'>
                   {chapter.chapterContent.map((lecture, lectureIndex) => (
                     <div key={lectureIndex} className='flex justify-between items-center mb-2 '>
                       <span>{lectureIndex + 1} {lecture.lectureTitle} - {lecture.lectureDuration} mins - <a href={lecture.lectureUrl} target="_blank" className='text-blue-500'>Link</a> - {lecture.isPreviewFree ? "Free Preview" : "Paid"}</span>
-                      <img onClick={()=>handleLecture("remove", chapter.chapterId, lectureIndex)} src={assets.cross_icon} className='cursor-pointer' alt="" />
+                      <img onClick={() => handleLecture("remove", chapter.chapterId, lectureIndex)} src={assets.cross_icon} className='cursor-pointer' alt="" />
                     </div>
                   ))}
-                  <div onClick={()=>handleLecture("add", chapter.chapterId)} className='inline-flex bg-gray-100 p-2 rounded cursor-pointer mt-2'>+ Add Lecture</div>
+                  <div onClick={() => handleLecture("add", chapter.chapterId)} className='inline-flex bg-gray-100 p-2 rounded cursor-pointer mt-2'>+ Add Lecture</div>
                 </div>
               )}
             </div>
           ))}
-          <div className='flex justify-center items-center bg-blue-100 p-2 rounded-lg cursor-pointer' onClick={()=>handleChapter("add")}>+ Add Chapter</div>
+          <div className='flex justify-center items-center bg-blue-100 p-2 rounded-lg cursor-pointer' onClick={() => handleChapter("add")}>+ Add Chapter</div>
           {showPopup && (
             <div className='fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50'>
               <div className='bg-white text-gray-700 p-4 rounded relative w-full max-w-80'>

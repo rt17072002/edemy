@@ -42,7 +42,7 @@ export const purchaseCourse = async (req, res) => {
         const courseData = await Course.findById(courseId)
 
         if (!userData || !courseData) {
-            res.json({ success: false, message: "data not found" });
+            return  res.json({ success: false, message: "data not found" });
         }
 
         const purchaseData = {
@@ -110,7 +110,7 @@ export const updateUserCourseProgress = async (req, res) => {
                 lectureCompleted: [lectureId],
             })
         }
-        res.json({ success: false, message: "Progress updated" })
+        res.json({ success: true, message: "Progress updated" })
     } catch (error) {
         res.json({ success: false, message: error.message });
 
@@ -153,7 +153,7 @@ export const addUserRating = async (req, res) => {
             return res.json({ success: false, message: "User has not purchased this course." });
         }
 
-        const existingRatingIndex = course.courseRating.findIndex(r => r.userId === userId);
+        const existingRatingIndex = course.courseRatings.findIndex(r => r.userId === userId);
 
         if (existingRatingIndex > -1) {
             course.courseRatings[existingRatingIndex].rating = rating;

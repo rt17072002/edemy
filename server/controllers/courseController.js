@@ -17,11 +17,14 @@ export const getCourseId = async (req, res) => {
     try {
         const courseData = await Course.findById(id).populate({ path: "educator" })
 
-        //remove lectureURL if isPreviewFree is false
+        if (!courseData) {
+            return res.json({ success: false, message: "Course not found" });
+        }
 
+        //remove lectureURL if isPreviewFree is false
         courseData.courseContent.forEach(chapter => {
             chapter.chapterContent.forEach(lecture => {
-                if (!lecture.isPreviewFree) {
+                if (!lecture.isPreview) {
                     lecture.lectureUrl = "";
                 }
             })
